@@ -10,8 +10,10 @@ import { Navigate, useNavigate } from "react-router-dom";
 export const Home = () => {
   const [nameValue, setNameValue] = useState("");
   const [nameError, setnameError] = useState(null);
-  const {user, setUser} = useContext(UserContext);
+  const {user, saveUser} = useContext(UserContext);
   const navigate = useNavigate();
+
+  // Validacion de nombre ingresado
   const handleChange = (e) => {
     const newNameValue = e.target.value;
     setNameValue(newNameValue);
@@ -26,10 +28,12 @@ export const Home = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if(!nameError) {
-      setUser(nameValue)
+      saveUser(nameValue)
       navigate('/pokedex')
     }
   }
+
+  
   return (
     <React.Fragment>
       <CssBaseline />
@@ -88,7 +92,7 @@ export const Home = () => {
               {nameError}
             </Typography>
           )}
-          {user && <Navigate to="/pokedex"/>}
+          {user && <Navigate to="/pokedex" replace/>}
         </Box>
       </Container>
     </React.Fragment>

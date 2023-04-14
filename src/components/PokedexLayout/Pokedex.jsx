@@ -1,75 +1,166 @@
 import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../context/UserContext";
-import axios from "axios";
 import { PokemonCard } from "../PokemonCard";
 import Pagination from "@mui/material/Pagination";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Container, Grid } from "@mui/material";
+import {
+  Button,
+  InputAdornment,
+  TextField,
+} from "@mui/material";
+import Typography from "@mui/material/Typography";
+
+import Select from "@mui/material/Select";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import { Form, useLoaderData } from "react-router-dom";
+import { usePagination } from "../../hooks/usePagination";
+import Box from "@mui/material/Box";
+import SearchIcon from "@mui/icons-material/Search";
+
 
 const theme = createTheme();
 
 export const Pokedex = () => {
-  //Constnates de pagination
+  const { types, pokemons, name, type } = useLoaderData();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [cardsPerPage] = useState(20);
-  ///************** */
-  const getAllPokemons = async () => {
-    try {
-      const res = await axios.get(
-        `https://pokeapi.co/api/v2/pokemon/?limit=${cardsPerPage}&offset=${
-          currentPage * 20
-        }`
-      );
-      return res.data.results;
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const [pokemonName, setPokemonName] = useState(name ?? '');
+  const [pokemonType, setPokemonType] = useState(type ?? '');
+
   //*********************** */
   const { user } = useContext(UserContext);
-  const [pokemons, setPokemons] = useState([]);
-  //Funcion de llamado de api por numero de pokemones
-
-  //**************
-  // Funcion de carga de pokemones en espera a que se ejecuten todos */
-  const loadAllPokemons = async () => {
-    const allPokemons = await getAllPokemons();
-    setPokemons(allPokemons);
+  const pokemonsPagination = usePagination(pokemons, 20);
+  //Paginacion
+  const handleChangePage = (event, value) => {
+    pokemonsPagination.changePageTo(value);
   };
-  //****************** */
-  useEffect(() => {
-    loadAllPokemons();
-  }, [currentPage]);
-  const handleChange = (e, value) => {
+  //********************* */
 
+  //** Manejadores */
+  const handleNameChange = (e) => {
     e.preventDefault();
-    setCurrentPage(value);
+    setPokemonName(e.target.value);
+    
   };
+
+  const handleTypeChange = (e) => {
+    e.preventDefault();
+    setPokemonType(e.target.value);
+    
+    
+  };
+
+  //***** */
+  // useEffect(() => {setPokemonName(name)}, [name]);
+  // useEffect(() => {setPokemonType(type)}, [type]);
+  //*** */
 
   return (
     <ThemeProvider theme={theme}>
       {pokemons && (
-        <>
-        
-          <h1>Pokedex</h1>
-          <p>
-            <span> Bienvenido {user}, </span>
-            aqui podras encontrar tu juego favorito
-          </p>
-          <Container sx={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems:'center'}}>
-          <Container sx={{ py: 4 }} maxWidth="lg">
-            <Grid container spacing={2}>
-              {pokemons.map((pokemon) => (
-                <Grid item key={pokemon} xs={12} sm={6} md={2.4}>
-                  <PokemonCard key={pokemon.url} pokemonData={pokemon} />
-                </Grid>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {/* Mensaje de Bienvenida */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              width: "100%",
+            }}
+          >
+            <Typography variant="h5">
+              <span style={{ color: "red" }}>Bienvenido {user}. </span> Aqui
+              podras encontrar tu pokemon favorito
+            </Typography>
+            
+          </Box>
+
+          {/* Controles */}
+          <Form>
+            <Box sx={{ display: "flex", py: 2, gap: 4 }}>
+              {/* Input de Busqueda */}
+              <Box sx={{ display: "flex" }}>
+                <TextField
+                  color="error"
+                  type="text"
+                  value={pokemonName}
+                  onChange={handleNameChange}
+                  name="pokemon_name"
+                  sx={{ display: "flex", width: "200px" }}
+                  // label="Busca un pokemon"
+                  placeholder="Busca un pokemon"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon style={{ color: "#EC2E18" }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+              </Box>
+              {/* Select de Type */}
+              <Box sx={{ display: "flex", width: "200px" }}>
+                <FormControl>
+                  <InputLabel color="error" id="demo-simple-select-label">
+                    Tipos
+                  </InputLabel>
+                  <Select
+                    labelId="demo-simple-select-label"
+                    id="demo-simple-select"
+                    name="pokemon_type"
+                    sx={{ width: "200px" }}
+                    color="error"
+                    value={pokemonType}
+                    label="Age"
+                    onChange={handleTypeChange}
+                  >
+                    {types.map((type) => (
+                      <MenuItem key={type.url} value={type.name}>
+                        {type.name}
+                      </MenuItem>
+                    ))}
+                    <MenuItem key={'default'} value={``}>Tipo</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {/* Boton de Search */}
+              <Box sx={{ display: "flex" }}>
+                <Button variant="contained" color="error" type="submit">
+                  Search
+                </Button>
+              </Box>
+            </Box>
+
+            {/* Pokedex */}
+            <Pagination
+              count={pokemonsPagination.pages.length}
+              onChange={handleChangePage}
+            />
+            <Box
+              sx={{
+                py: 2,
+                gap: 2,
+                display: "flex",
+                flexWrap: "wrap",
+                width: "100%",
+                justifyContent: "center",
+                textAlign: "center",
+              }}
+            >
+              {pokemonsPagination.listSlice.map((pokemon) => (
+                <PokemonCard key={pokemon.url} pokemonData={pokemon} />
               ))}
-            </Grid>
-          </Container>
-          <Pagination count={100} page={currentPage} onChange={handleChange} sx={{textAlign: 'center'}} />
-        </Container>
-        </>
+            </Box>
+          </Form>
+        </Box>
       )}
     </ThemeProvider>
   );
